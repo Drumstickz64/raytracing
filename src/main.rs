@@ -40,7 +40,19 @@ fn main() {
 }
 
 fn ray_color(r: Ray) -> glam::Vec3 {
+    if hit_sphere(glam::vec3(0.0, 0.0, -1.0), 0.5, r) {
+        return color::RED;
+    }
     let unit_direction = r.direction.normalize();
     let delta = (unit_direction.y + 1.0) * 0.5;
     color::WHITE.lerp(color::BLUE, delta)
+}
+
+fn hit_sphere(center: glam::Vec3, radius: f32, r: Ray) -> bool {
+    let oc = r.origin - center;
+    let a = r.direction.dot(r.direction);
+    let b = 2.0 * oc.dot(r.direction);
+    let c = oc.dot(oc) - radius * radius;
+    let discriminant = b * b - 4.0 * a * c;
+    discriminant > 0.0
 }
