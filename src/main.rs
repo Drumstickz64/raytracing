@@ -1,8 +1,14 @@
 mod color;
+mod hittable;
+mod hittable_list;
 mod ray;
+mod sphere;
 
 use color::stringify_color;
+use hittable::{HitRecord, Hittable};
 use ray::Ray;
+
+use crate::{hittable_list::HittableList, sphere::Sphere};
 
 // Screen
 const ASPECT_RATIO: f32 = 16.0 / 9.0;
@@ -21,6 +27,12 @@ const VERTICAL: glam::Vec3 = glam::vec3(0.0, VIEWPORT_HEIGHT, 0.0);
 fn main() {
     let lower_left_corner =
         ORIGIN - HORIZONTAL / 2.0 - VERTICAL / 2.0 - glam::vec3(0.0, 0.0, FOCAL_LENGTH);
+
+    // World
+    let mut world = HittableList::default();
+    world.add(Box::new(Sphere::new(glam::vec3(0.0, 0.0, -1.0), 0.5)));
+    world.add(Box::new(Sphere::new(glam::vec3(0.0, -100.5, -1.0), 100.0)));
+
     print!("P3\n{IMAGE_WIDTH} {IMAGE_HEIGHT}\n255\n");
     for j in (0..IMAGE_HEIGHT).rev() {
         eprint!("\raScanlines remaining: {j} {esc}", esc = 27 as char);
@@ -31,7 +43,7 @@ fn main() {
                 ORIGIN,
                 lower_left_corner + u * HORIZONTAL + v * VERTICAL - ORIGIN,
             );
-            let color = ray_color(r);
+            let color = ray_color(r, &world);
             print!("{}\t\t", stringify_color(color));
         }
         println!();
@@ -39,20 +51,26 @@ fn main() {
     eprintln!("\naI'm Done!");
 }
 
-fn ray_color(r: Ray) -> glam::Vec3 {
-    if hit_sphere(glam::vec3(0.0, 0.0, -1.0), 0.5, r) {
-        return color::RED;
+fn ray_color(r: Ray, world: &dyn Hittable) -> glam::Vec3 {
+    let mut rec = HitRecord::default();
+    if world.hit(r, 0.0, f32::INFINITY, &mut rec) {
+        return 0.5 * (color::WHITE + rec.normal);
     }
+    // Background
     let unit_direction = r.direction.normalize();
     let delta = (unit_direction.y + 1.0) * 0.5;
     color::WHITE.lerp(color::BLUE, delta)
 }
 
-fn hit_sphere(center: glam::Vec3, radius: f32, r: Ray) -> bool {
+fn hit_sphere(center: glam::Vec3, radius: f32, r: Ray) -> Option<f32> {
     let oc = r.origin - center;
-    let a = r.direction.dot(r.direction);
-    let b = 2.0 * oc.dot(r.direction);
-    let c = oc.dot(oc) - radius * radius;
-    let discriminant = b * b - 4.0 * a * c;
-    discriminant > 0.0
+    let a = r.direction.length_squared();
+    let half_b = oc.dot(r.direction);
+    let c = oc.length_squared() - radius * radius;
+    let discriminant = half_b * half_b - a * c;
+    if discriminant < 0.0 {
+        None
+    } else {
+        Some((-half_b - discriminant.sqrt()) / a)
+    }
 }
