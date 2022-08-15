@@ -2,18 +2,18 @@ use crate::hittable::{HitRecord, Hittable};
 
 #[derive(Debug, Clone, Copy)]
 pub struct Sphere {
-    pub center: glam::Vec3,
-    pub radius: f32,
+    pub center: glam::DVec3,
+    pub radius: f64,
 }
 
 impl Sphere {
-    pub fn new(center: glam::Vec3, radius: f32) -> Sphere {
+    pub fn new(center: glam::DVec3, radius: f64) -> Sphere {
         Self { center, radius }
     }
 }
 
 impl Hittable for Sphere {
-    fn hit(&self, r: crate::ray::Ray, t_min: f32, t_max: f32, rec: &mut HitRecord) -> bool {
+    fn hit(&self, r: crate::ray::Ray, t_min: f64, t_max: f64, rec: &mut HitRecord) -> bool {
         let oc = r.origin - self.center;
         let a = r.direction.length_squared();
         let half_b = oc.dot(r.direction);

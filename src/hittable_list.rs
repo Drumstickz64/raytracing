@@ -8,15 +8,15 @@ pub struct HittableList {
 }
 
 impl HittableList {
-    pub fn new(object: Box<dyn Hittable>) -> HittableList {
-        Self {
-            objects: vec![object],
-        }
-    }
+    // pub fn new(object: Box<dyn Hittable>) -> HittableList {
+    //     Self {
+    //         objects: vec![object],
+    //     }
+    // }
 
-    pub fn clear(&mut self) {
-        self.objects.clear();
-    }
+    // pub fn clear(&mut self) {
+    //     self.objects.clear();
+    // }
 
     pub fn add(&mut self, object: Box<dyn Hittable>) {
         self.objects.push(object);
@@ -24,7 +24,7 @@ impl HittableList {
 }
 
 impl Hittable for HittableList {
-    fn hit(&self, r: Ray, t_min: f32, t_max: f32, rec: &mut HitRecord) -> bool {
+    fn hit(&self, r: Ray, t_min: f64, t_max: f64, rec: &mut HitRecord) -> bool {
         let mut temp_rec = HitRecord::default();
         let mut hit_anything = false;
         let mut closest_so_far = t_max;
