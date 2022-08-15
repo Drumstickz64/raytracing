@@ -6,6 +6,9 @@ mod math;
 mod ray;
 mod sphere;
 
+use std::{fmt::Write, fs};
+
+use indicatif::{ProgressBar, ProgressState, ProgressStyle};
 use rand::prelude::*;
 
 use crate::{
@@ -23,17 +26,20 @@ const IMAGE_WIDTH: u32 = 400;
 const IMAGE_HEIGHT: u32 = (IMAGE_WIDTH as f32 / ASPECT_RATIO) as u32;
 const SAMPLES_PER_PIXEL: u32 = 100;
 const MAX_DEPTH: i32 = 50;
-fn main() {
+const OUTPUT_FILE: &str = "out.ppm";
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cam = Camera::new();
+    let mut buf = String::new();
+    let pb = ProgressBar::new(IMAGE_HEIGHT as u64);
 
     // World
     let mut world = HittableList::default();
     world.add(Box::new(Sphere::new(glam::vec3(0.0, 0.0, -1.0), 0.5)));
     world.add(Box::new(Sphere::new(glam::vec3(0.0, -100.5, -1.0), 100.0)));
 
-    print!("P3\n{IMAGE_WIDTH} {IMAGE_HEIGHT}\n255\n");
+    write!(&mut buf, "P3\n{IMAGE_WIDTH} {IMAGE_HEIGHT}\n255\n")?;
+
     for j in (0..IMAGE_HEIGHT).rev() {
-        eprint!("\raScanlines remaining: {j} {esc}", esc = 27 as char);
         for i in 0..IMAGE_WIDTH {
             let mut pixel_color = color::BLACK;
             for _ in 0..SAMPLES_PER_PIXEL {
@@ -42,11 +48,17 @@ fn main() {
                 let r = cam.get_ray(u, v);
                 pixel_color += ray_color(r, &world, MAX_DEPTH);
             }
-            print!("{}\t\t", stringify_color(pixel_color, SAMPLES_PER_PIXEL));
+            write!(
+                &mut buf,
+                "{}",
+                stringify_color(pixel_color, SAMPLES_PER_PIXEL)
+            )?;
         }
-        println!();
+        pb.set_position((IMAGE_HEIGHT - j) as u64);
     }
-    eprintln!("\naI'm Done!");
+    fs::write(OUTPUT_FILE, buf)?;
+    pb.finish_with_message("Done!");
+    Ok(())
 }
 
 fn ray_color(r: Ray, world: &dyn Hittable, depth: i32) -> glam::Vec3 {
@@ -56,7 +68,7 @@ fn ray_color(r: Ray, world: &dyn Hittable, depth: i32) -> glam::Vec3 {
         return color::BLACK;
     }
 
-    if world.hit(r, 0.0, f32::INFINITY, &mut rec) {
+    if world.hit(r, 0.01, f32::INFINITY, &mut rec) {
         let target = rec.point + rec.normal + math::random_vec_in_unit_sphere();
         let diffuse_ray = Ray::new(rec.point, target - rec.point);
         return 0.5 * ray_color(diffuse_ray, world, depth - 1);
