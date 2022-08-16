@@ -1,9 +1,12 @@
-use crate::ray::Ray;
+use std::rc::Rc;
 
-#[derive(Default, Debug, Clone, Copy)]
+use crate::{material::Material, ray::Ray};
+
+#[derive(Default, Clone)]
 pub struct HitRecord {
     pub point: glam::DVec3,
     pub normal: glam::DVec3,
+    pub mat: Option<Rc<dyn Material>>,
     pub t: f64,
     pub front_face: bool,
 }

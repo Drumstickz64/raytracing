@@ -2,13 +2,15 @@ mod camera;
 mod color;
 mod hittable;
 mod hittable_list;
+mod material;
 mod math;
 mod ray;
 mod sphere;
 
-use std::{fmt::Write, fs};
+use std::{fmt::Write, fs, rc::Rc};
 
 use indicatif::ProgressBar;
+use material::{lambertian::Lambertian, metal::Metal};
 use rand::prelude::*;
 
 use crate::{
@@ -33,9 +35,32 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let pb = ProgressBar::new(IMAGE_HEIGHT as u64);
 
     // World
+    let mat_ground = Rc::new(Lambertian::new(color::LIGHT_GRASS_GREEN));
+    let mat_center = Rc::new(Lambertian::new(color::LIGHT_CLAY));
+    let mat_left = Rc::new(Metal::new(color::LIGHT_GRAY, 0.3));
+    let mat_right = Rc::new(Metal::new(color::RUSTY_RED, 1.0));
+
     let mut world = HittableList::default();
-    world.add(Box::new(Sphere::new(glam::dvec3(0.0, 0.0, -1.0), 0.5)));
-    world.add(Box::new(Sphere::new(glam::dvec3(0.0, -100.5, -1.0), 100.0)));
+    world.add(Rc::new(Sphere::new(
+        glam::dvec3(0.0, -100.5, -1.0),
+        100.0,
+        mat_ground,
+    )));
+    world.add(Rc::new(Sphere::new(
+        glam::dvec3(0.0, 0.0, -1.0),
+        0.5,
+        mat_center,
+    )));
+    world.add(Rc::new(Sphere::new(
+        glam::dvec3(-1.0, 0.0, -1.0),
+        0.5,
+        mat_left,
+    )));
+    world.add(Rc::new(Sphere::new(
+        glam::dvec3(1.0, 0.0, -1.0),
+        0.5,
+        mat_right,
+    )));
 
     write!(&mut buf, "P3\n{IMAGE_WIDTH} {IMAGE_HEIGHT}\n255\n")?;
 
@@ -70,9 +95,13 @@ fn ray_color(r: Ray, world: &dyn Hittable, depth: i32) -> glam::DVec3 {
     }
 
     if world.hit(r, 0.0001, f64::INFINITY, &mut rec) {
-        let target = rec.point + rec.normal + math::random_unit_vec();
-        let diffuse_ray = Ray::new(rec.point, target - rec.point);
-        return 0.5 * ray_color(diffuse_ray, world, depth - 1);
+        let mut scattered = Ray::default();
+        let mut attenuation = color::BLACK;
+        let mat = rec.mat.clone().expect("HitRecord must have a material");
+        if mat.scatter(r, &mut rec, &mut attenuation, &mut scattered) {
+            return attenuation * ray_color(scattered, world, depth - 1);
+        }
+        return color::BLACK;
     }
     // Background
     let unit_direction = r.direction.normalize();
