@@ -4,7 +4,7 @@ use crate::{
     ray::Ray,
 };
 
-use super::Material;
+use super::{Material, MaterialRayInteraction};
 
 pub struct Metal {
     pub albedo: glam::DVec3,
@@ -21,19 +21,20 @@ impl Metal {
 }
 
 impl Material for Metal {
-    fn scatter(
-        &self,
-        r_in: Ray,
-        rec: &mut HitRecord,
-        attenuation: &mut glam::DVec3,
-        scattered: &mut Ray,
-    ) -> bool {
+    fn scatter(&self, r_in: Ray, rec: &HitRecord) -> MaterialRayInteraction {
         let reflection_direction = r_in.direction.normalize().reflect(rec.normal);
-        *scattered = Ray::new(
+        let scattered_ray = Ray::new(
             rec.point,
             reflection_direction + math::random_vec_in_unit_sphere() * self.fuzzines,
         );
-        *attenuation = self.albedo;
-        scattered.direction.dot(rec.normal) > 0.0
+        let attenuation = self.albedo;
+        if scattered_ray.direction.dot(rec.normal) > 0.0 {
+            MaterialRayInteraction::Scattered {
+                attenuation,
+                scattered_ray,
+            }
+        } else {
+            MaterialRayInteraction::Absorbed
+        }
     }
 }

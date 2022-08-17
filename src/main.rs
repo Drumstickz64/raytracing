@@ -10,16 +10,12 @@ mod sphere;
 use std::{fmt::Write, fs, rc::Rc};
 
 use indicatif::ProgressBar;
-use material::{lambertian::Lambertian, metal::Metal};
+use material::{lambertian::Lambertian, metal::Metal, MaterialRayInteraction};
 use rand::prelude::*;
 
 use crate::{
-    camera::Camera,
-    color::stringify_color,
-    hittable::{HitRecord, Hittable},
-    hittable_list::HittableList,
-    ray::Ray,
-    sphere::Sphere,
+    camera::Camera, color::stringify_color, hittable::Hittable, hittable_list::HittableList,
+    ray::Ray, sphere::Sphere,
 };
 
 // Screen
@@ -88,18 +84,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn ray_color(r: Ray, world: &dyn Hittable, depth: i32) -> glam::DVec3 {
-    let mut rec = HitRecord::default();
-
     if depth <= 0 {
         return color::BLACK;
     }
 
-    if world.hit(r, 0.0001, f64::INFINITY, &mut rec) {
-        let mut scattered = Ray::default();
-        let mut attenuation = color::BLACK;
-        let mat = rec.mat.clone().expect("HitRecord must have a material");
-        if mat.scatter(r, &mut rec, &mut attenuation, &mut scattered) {
-            return attenuation * ray_color(scattered, world, depth - 1);
+    if let Some(rec) = world.hit(r, 0.0001, f64::INFINITY) {
+        if let Some(mat) = &rec.mat {
+            if let MaterialRayInteraction::Scattered {
+                attenuation,
+                scattered_ray,
+            } = mat.scatter(r, &rec)
+            {
+                return attenuation * ray_color(scattered_ray, world, depth - 1);
+            }
         }
         return color::BLACK;
     }
