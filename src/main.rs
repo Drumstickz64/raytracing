@@ -10,12 +10,18 @@ mod sphere;
 use std::{fmt::Write, fs, rc::Rc};
 
 use indicatif::ProgressBar;
-use material::{lambertian::Lambertian, metal::Metal, MaterialRayInteraction};
 use rand::prelude::*;
 
 use crate::{
-    camera::Camera, color::stringify_color, hittable::Hittable, hittable_list::HittableList,
-    ray::Ray, sphere::Sphere,
+    camera::Camera,
+    color::stringify_color,
+    hittable::Hittable,
+    hittable_list::HittableList,
+    material::{
+        dielectric::Dielectric, lambertian::Lambertian, metal::Metal, MaterialRayInteraction,
+    },
+    ray::Ray,
+    sphere::Sphere,
 };
 
 // Screen
@@ -31,10 +37,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let pb = ProgressBar::new(IMAGE_HEIGHT as u64);
 
     // World
-    let mat_ground = Rc::new(Lambertian::new(color::LIGHT_GRASS_GREEN));
-    let mat_center = Rc::new(Lambertian::new(color::LIGHT_CLAY));
-    let mat_left = Rc::new(Metal::new(color::LIGHT_GRAY, 0.3));
-    let mat_right = Rc::new(Metal::new(color::RUSTY_RED, 1.0));
+    let mat_ground = Rc::new(Lambertian::new(glam::dvec3(0.8, 0.8, 0.0)));
+    let mat_center = Rc::new(Lambertian::new(glam::dvec3(0.1, 0.2, 0.5)));
+    let mat_left = Rc::new(Dielectric::new(1.5));
+    let mat_right = Rc::new(Metal::new(glam::dvec3(0.8, 0.6, 0.2), 0.0));
 
     let mut world = HittableList::default();
     world.add(Rc::new(Sphere::new(
@@ -50,6 +56,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     world.add(Rc::new(Sphere::new(
         glam::dvec3(-1.0, 0.0, -1.0),
         0.5,
+        mat_left.clone(),
+    )));
+    world.add(Rc::new(Sphere::new(
+        glam::dvec3(-1.0, 0.0, -1.0),
+        -0.4,
         mat_left,
     )));
     world.add(Rc::new(Sphere::new(
@@ -90,18 +101,17 @@ fn ray_color(r: Ray, world: &dyn Hittable, depth: i32) -> glam::DVec3 {
 
     if let Some(rec) = world.hit(r, 0.0001, f64::INFINITY) {
         if let Some(mat) = &rec.mat {
-            if let MaterialRayInteraction::Scattered {
-                attenuation,
-                scattered_ray,
-            } = mat.scatter(r, &rec)
-            {
-                return attenuation * ray_color(scattered_ray, world, depth - 1);
-            }
+            return match mat.scatter(r, &rec) {
+                MaterialRayInteraction::Absorbed => color::BLACK,
+                MaterialRayInteraction::Scattered {
+                    attenuation,
+                    scattered_ray,
+                } => attenuation * ray_color(scattered_ray, world, depth - 1),
+            };
         }
-        return color::BLACK;
     }
     // Background
     let unit_direction = r.direction.normalize();
     let delta = (unit_direction.y + 1.0) * 0.5;
-    color::WHITE.lerp(color::BLUE, delta)
+    color::WHITE.lerp(color::SKY_BLUE, delta)
 }

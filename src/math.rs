@@ -23,19 +23,20 @@ pub fn random_unit_vec() -> glam::DVec3 {
     random_vec_in_unit_sphere().normalize()
 }
 
-pub fn random_in_hemisphere(normal: glam::DVec3) -> glam::DVec3 {
-    let in_unit_sphere = random_vec_in_unit_sphere();
-    if in_unit_sphere.dot(normal) > 0.0 {
-        // In the same hemisphere as the normal
-        in_unit_sphere
-    } else {
-        -in_unit_sphere
-    }
-}
+// pub fn random_in_hemisphere(normal: glam::DVec3) -> glam::DVec3 {
+//     let in_unit_sphere = random_vec_in_unit_sphere();
+//     if in_unit_sphere.dot(normal) > 0.0 {
+//         // In the same hemisphere as the normal
+//         in_unit_sphere
+//     } else {
+//         -in_unit_sphere
+//     }
+// }
 
 pub trait VecExtension: Copy {
     fn is_near_zero(self) -> bool;
-    fn reflect(self, rhs: glam::DVec3) -> glam::DVec3;
+    fn reflect(self, rhs: glam::DVec3) -> Self;
+    fn refract(self, normal: glam::DVec3, etai_over_etat: f64) -> Self;
 }
 
 impl VecExtension for glam::DVec3 {
@@ -44,7 +45,14 @@ impl VecExtension for glam::DVec3 {
         self.x.abs() < s && self.y.abs() < s && self.z.abs() < s
     }
 
-    fn reflect(self, normal: glam::DVec3) -> glam::DVec3 {
+    fn reflect(self, normal: glam::DVec3) -> Self {
         self - 2.0 * self.dot(normal) * normal
+    }
+
+    fn refract(self, normal: glam::DVec3, etai_over_etat: f64) -> Self {
+        let cos_theta = -self.dot(normal).min(1.0);
+        let r_out_perp = etai_over_etat * (self + cos_theta * normal);
+        let r_out_parallel = -(1.0 - r_out_perp.length_squared()).abs().sqrt() * normal;
+        r_out_perp + r_out_parallel
     }
 }

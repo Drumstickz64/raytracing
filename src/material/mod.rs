@@ -12,5 +12,6 @@ pub trait Material {
     fn scatter(&self, r_in: Ray, rec: &HitRecord) -> MaterialRayInteraction;
 }
 
+pub mod dielectric;
 pub mod lambertian;
 pub mod metal;
