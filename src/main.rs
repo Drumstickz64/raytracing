@@ -10,6 +10,7 @@ mod sphere;
 use std::{fmt::Write, fs, rc::Rc};
 
 use indicatif::ProgressBar;
+use material::{dielectric::Dielectric, metal::Metal};
 use rand::prelude::*;
 
 use crate::{
@@ -17,9 +18,7 @@ use crate::{
     color::stringify_color,
     hittable::Hittable,
     hittable_list::HittableList,
-    material::{
-        dielectric::Dielectric, lambertian::Lambertian, metal::Metal, MaterialRayInteraction,
-    },
+    material::{lambertian::Lambertian, MaterialRayInteraction},
     ray::Ray,
     sphere::Sphere,
 };
@@ -32,17 +31,17 @@ const SAMPLES_PER_PIXEL: u32 = 100;
 const MAX_DEPTH: i32 = 50;
 const OUTPUT_FILE: &str = "out.ppm";
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let cam = Camera::new();
     let mut buf = String::with_capacity((IMAGE_WIDTH * IMAGE_HEIGHT) as usize * 12 + 20);
     let pb = ProgressBar::new(IMAGE_HEIGHT as u64);
 
     // World
+    let mut world = HittableList::default();
+
     let mat_ground = Rc::new(Lambertian::new(glam::dvec3(0.8, 0.8, 0.0)));
     let mat_center = Rc::new(Lambertian::new(glam::dvec3(0.1, 0.2, 0.5)));
     let mat_left = Rc::new(Dielectric::new(1.5));
     let mat_right = Rc::new(Metal::new(glam::dvec3(0.8, 0.6, 0.2), 0.0));
 
-    let mut world = HittableList::default();
     world.add(Rc::new(Sphere::new(
         glam::dvec3(0.0, -100.5, -1.0),
         100.0,
@@ -60,7 +59,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     )));
     world.add(Rc::new(Sphere::new(
         glam::dvec3(-1.0, 0.0, -1.0),
-        -0.4,
+        -0.45,
         mat_left,
     )));
     world.add(Rc::new(Sphere::new(
@@ -68,6 +67,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         0.5,
         mat_right,
     )));
+
+    // Camera
+    let cam = Camera::new(
+        glam::dvec3(-2.0, 2.0, 1.0),
+        glam::dvec3(0.0, 0.0, -1.0),
+        glam::dvec3(0.0, 1.0, 0.0),
+        90.0,
+        ASPECT_RATIO,
+    );
 
     write!(&mut buf, "P3\n{IMAGE_WIDTH} {IMAGE_HEIGHT}\n255\n")?;
 
