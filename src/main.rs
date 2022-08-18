@@ -69,12 +69,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     )));
 
     // Camera
+    let lookfrom = glam::dvec3(3.0, 3.0, 2.0);
+    let lookat = glam::dvec3(0.0, 0.0, -1.0);
+    let vup = glam::dvec3(0.0, 1.0, 0.0);
+    let vfov = 20.0;
+    let aperture = 2.0;
+    let dist_to_focus = (lookfrom - lookat).length();
     let cam = Camera::new(
-        glam::dvec3(-2.0, 2.0, 1.0),
-        glam::dvec3(0.0, 0.0, -1.0),
-        glam::dvec3(0.0, 1.0, 0.0),
-        90.0,
+        lookfrom,
+        lookat,
+        vup,
+        vfov,
         ASPECT_RATIO,
+        aperture,
+        dist_to_focus,
     );
 
     write!(&mut buf, "P3\n{IMAGE_WIDTH} {IMAGE_HEIGHT}\n255\n")?;

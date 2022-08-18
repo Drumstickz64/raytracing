@@ -25,7 +25,7 @@ impl Material for Metal {
         let reflection_direction = r_in.direction.normalize().reflect(rec.normal);
         let scattered_ray = Ray::new(
             rec.point,
-            reflection_direction + math::random_vec_in_unit_sphere() * self.fuzzines,
+            reflection_direction + math::random_point_in_unit_sphere() * self.fuzzines,
         );
         let attenuation = self.albedo;
         if scattered_ray.direction.dot(rec.normal) > 0.0 {
