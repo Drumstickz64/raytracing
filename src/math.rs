@@ -34,16 +34,6 @@ pub fn random_unit_vec() -> glam::DVec3 {
     random_point_in_unit_sphere().normalize()
 }
 
-// pub fn random_in_hemisphere(normal: glam::DVec3) -> glam::DVec3 {
-//     let in_unit_sphere = random_vec_in_unit_sphere();
-//     if in_unit_sphere.dot(normal) > 0.0 {
-//         // In the same hemisphere as the normal
-//         in_unit_sphere
-//     } else {
-//         -in_unit_sphere
-//     }
-// }
-
 pub trait VecExtension: Copy {
     fn is_near_zero(self) -> bool;
     fn reflect(self, rhs: glam::DVec3) -> Self;

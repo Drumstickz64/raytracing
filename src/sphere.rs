@@ -1,19 +1,20 @@
-use std::rc::Rc;
+use std::sync::Arc;
 
 use crate::{
     hittable::{HitRecord, Hittable},
     material::Material,
+    ray::Ray,
 };
 
 #[derive(Clone)]
 pub struct Sphere {
     pub center: glam::DVec3,
     pub radius: f64,
-    pub mat: Rc<dyn Material>,
+    pub mat: Arc<dyn Material>,
 }
 
 impl Sphere {
-    pub fn new(center: glam::DVec3, radius: f64, mat: Rc<dyn Material>) -> Sphere {
+    pub fn new(center: glam::DVec3, radius: f64, mat: Arc<dyn Material>) -> Sphere {
         Self {
             center,
             radius,
@@ -23,7 +24,7 @@ impl Sphere {
 }
 
 impl Hittable for Sphere {
-    fn hit(&self, r: crate::ray::Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+    fn hit(&self, r: Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let oc = r.origin - self.center;
         let a = r.direction.length_squared();
         let half_b = oc.dot(r.direction);

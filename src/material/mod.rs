@@ -8,7 +8,7 @@ pub enum MaterialRayInteraction {
     },
 }
 
-pub trait Material {
+pub trait Material: Send + Sync {
     fn scatter(&self, r_in: Ray, rec: &HitRecord) -> MaterialRayInteraction;
 }
 
