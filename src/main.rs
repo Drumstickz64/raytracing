@@ -7,7 +7,7 @@ mod math;
 mod ray;
 mod sphere;
 
-use std::{fmt::Write, fs, sync::Arc};
+use std::{fs, sync::Arc, time::Duration};
 
 use indicatif::ProgressBar;
 use rand::prelude::*;
@@ -28,14 +28,15 @@ use crate::{
 
 // Screen
 const ASPECT_RATIO: f64 = 3.0 / 2.0;
-const IMAGE_WIDTH: u32 = 1200;
+const IMAGE_WIDTH: u32 = 300;
 const IMAGE_HEIGHT: u32 = (IMAGE_WIDTH as f64 / ASPECT_RATIO) as u32;
-const SAMPLES_PER_PIXEL: u32 = 500;
-const MAX_DEPTH: i32 = 50;
+const SAMPLES_PER_PIXEL: u32 = 100;
+const MAX_DEPTH: i32 = 20;
 const OUTPUT_FILE: &str = "out.ppm";
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let mut buf = String::with_capacity((IMAGE_WIDTH * IMAGE_HEIGHT) as usize * 12 + 20);
-    let pb = ProgressBar::new(IMAGE_HEIGHT as u64);
+    let pb = ProgressBar::new_spinner().with_message("Processing...");
+    pb.enable_steady_tick(Duration::from_millis(100));
 
     // World
     let world = random_scene();
@@ -57,32 +58,33 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         dist_to_focus,
     );
 
-    write!(&mut buf, "P3\n{IMAGE_WIDTH} {IMAGE_HEIGHT}\n255\n")?;
+    let buf: String = (0..IMAGE_HEIGHT)
+        .into_par_iter()
+        .rev()
+        .flat_map(|j| {
+            let cam = &cam;
+            let world = &world;
+            (0..IMAGE_WIDTH).into_par_iter().map(move |i| {
+                (0..SAMPLES_PER_PIXEL)
+                    .into_par_iter()
+                    .map(|_| {
+                        let mut rng = thread_rng();
+                        let u = (i as f64 + rng.gen::<f64>()) / (IMAGE_WIDTH + 1) as f64;
+                        let v = (j as f64 + rng.gen::<f64>()) / (IMAGE_HEIGHT + 1) as f64;
+                        let r = cam.get_ray(u, v);
+                        ray_color(r, world, MAX_DEPTH)
+                    })
+                    .reduce(
+                        || color::BLACK,
+                        |pixel_color, sample_color| pixel_color + sample_color,
+                    )
+            })
+        })
+        .map(|color| stringify_color(color, SAMPLES_PER_PIXEL))
+        .collect();
 
-    for j in (0..IMAGE_HEIGHT).rev() {
-        for i in 0..IMAGE_WIDTH {
-            let pixel_color = (0..SAMPLES_PER_PIXEL)
-                .into_par_iter()
-                .map(|_| {
-                    let mut rng = thread_rng();
-                    let u = (i as f64 + rng.gen::<f64>()) / (IMAGE_WIDTH + 1) as f64;
-                    let v = (j as f64 + rng.gen::<f64>()) / (IMAGE_HEIGHT + 1) as f64;
-                    let r = cam.get_ray(u, v);
-                    ray_color(r, &world, MAX_DEPTH)
-                })
-                .reduce(
-                    || color::BLACK,
-                    |pixel_color, sample_color| pixel_color + sample_color,
-                );
-            write!(
-                &mut buf,
-                "{}",
-                stringify_color(pixel_color, SAMPLES_PER_PIXEL)
-            )?;
-        }
-        pb.set_position((IMAGE_HEIGHT - j) as u64);
-    }
-    fs::write(OUTPUT_FILE, &buf)?;
+    let metadata = format!("P3\n{IMAGE_WIDTH} {IMAGE_HEIGHT}\n255\n");
+    fs::write(OUTPUT_FILE, metadata + &buf)?;
     pb.finish_with_message("Done!");
     Ok(())
 }
