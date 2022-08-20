@@ -1,3 +1,7 @@
+mod dielectric;
+mod lambertian;
+mod metal;
+
 use crate::{hittable::HitRecord, ray::Ray};
 
 pub enum MaterialRayInteraction {
@@ -12,6 +16,6 @@ pub trait Material {
     fn scatter(&self, r_in: Ray, rec: &HitRecord) -> MaterialRayInteraction;
 }
 
-pub mod dielectric;
-pub mod lambertian;
-pub mod metal;
+pub use dielectric::Dielectric;
+pub use lambertian::Lambertian;
+pub use metal::Metal;

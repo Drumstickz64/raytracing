@@ -40,7 +40,7 @@ impl Material for Dielectric {
         } else {
             unit_direction.refract(rec.normal, refraction_ratio)
         };
-        let ray = Ray::new(rec.point, direction);
+        let ray = Ray::new(rec.point, direction, r_in.time);
         MaterialRayInteraction::Scattered {
             attenuation,
             scattered_ray: ray,
