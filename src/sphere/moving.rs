@@ -1,6 +1,7 @@
 use std::rc::Rc;
 
 use crate::{
+    aabb::Aabb,
     hittable::{HitRecord, Hittable},
     material::Material,
 };
@@ -74,5 +75,14 @@ impl Hittable for MovingSphere {
 
         rec.set_face_normal(r, outward_normal);
         Some(rec)
+    }
+
+    fn bounding_box(&self, time0: f64, time1: f64) -> Option<Aabb> {
+        let center_to_edge = glam::DVec3::splat(self.radius);
+        let center0 = self.center(time0);
+        let box0 = Aabb::new(center0 - center_to_edge, center0 + center_to_edge);
+        let center1 = self.center(time1);
+        let box1 = Aabb::new(center1 - center_to_edge, center1 + center_to_edge);
+        Some(box0 + box1)
     }
 }

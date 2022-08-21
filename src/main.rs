@@ -1,3 +1,5 @@
+mod aabb;
+mod bvh;
 mod camera;
 mod color;
 mod hittable;
@@ -6,28 +8,23 @@ mod material;
 mod math;
 mod ray;
 mod sphere;
+mod test_scenes;
 
-use std::{fmt::Write, fs, rc::Rc};
+use std::{fmt::Write, fs};
 
 use indicatif::ProgressBar;
 use rand::prelude::*;
-use sphere::MovingSphere;
 
 use crate::{
-    camera::Camera,
-    color::stringify_color,
-    hittable::Hittable,
-    hittable_list::HittableList,
-    material::{Dielectric, Lambertian, Material, MaterialRayInteraction, Metal},
-    ray::Ray,
-    sphere::Sphere,
+    bvh::BvhNode, camera::Camera, color::stringify_color, hittable::Hittable,
+    material::MaterialRayInteraction, ray::Ray,
 };
 
 // Screen
 const ASPECT_RATIO: f64 = 16.0 / 9.0;
 const IMAGE_WIDTH: u32 = 400;
 const IMAGE_HEIGHT: u32 = (IMAGE_WIDTH as f64 / ASPECT_RATIO) as u32;
-const SAMPLES_PER_PIXEL: u32 = 100;
+const SAMPLES_PER_PIXEL: u32 = 50;
 const MAX_DEPTH: i32 = 50;
 const OUTPUT_FILE: &str = "out.ppm";
 
@@ -35,8 +32,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut buf = String::with_capacity((IMAGE_WIDTH * IMAGE_HEIGHT) as usize * 12 + 20);
     let pb = ProgressBar::new(IMAGE_HEIGHT as u64);
 
+    let time0 = 0.0;
+    let time1 = 1.0;
     // World
-    let world = random_scene();
+    let world = test_scenes::random_scene();
+    let world = BvhNode::from_hittable_list(world, time0, time1);
 
     // Camera
     let lookfrom = glam::dvec3(13.0, 2.0, 3.0);
@@ -45,8 +45,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let vfov = 20.0;
     let aperture = 0.1;
     let dist_to_focus = 10.0;
-    let time0 = 0.0;
-    let time1 = 1.0;
     let cam = Camera::new(
         lookfrom,
         lookat,
@@ -82,60 +80,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     fs::write(OUTPUT_FILE, buf)?;
     pb.finish_with_message("Done!");
     Ok(())
-}
-
-fn random_scene() -> HittableList {
-    let mut world = HittableList::default();
-    let mut rng = thread_rng();
-    let ground_mat = Rc::new(Lambertian::new(glam::DVec3::splat(0.5)));
-    world.add(Rc::new(Sphere::new(
-        glam::dvec3(0.0, -1000.0, 0.0),
-        1000.0,
-        ground_mat,
-    )));
-    for a in -11..11 {
-        for b in -11..11 {
-            let choose_mat = rng.gen::<f64>();
-            let center = glam::dvec3(
-                a as f64 + 0.9 * rng.gen::<f64>(),
-                0.2,
-                b as f64 + 0.9 * rng.gen::<f64>(),
-            );
-            if center.distance(glam::dvec3(4.0, 0.2, 0.0)) > 0.9 {
-                let sphere_mat: Rc<dyn Material>;
-                if choose_mat < 0.8 {
-                    // diffuse
-                    let center2 = center + glam::dvec3(0.0, rng.gen_range(0.0..0.5), 0.0);
-                    let albedo = rng.gen::<glam::DVec3>() * rng.gen::<glam::DVec3>();
-                    sphere_mat = Rc::new(Lambertian::new(albedo));
-                    world.add(Rc::new(MovingSphere::new(
-                        center, center2, 0.0, 1.0, 0.2, sphere_mat,
-                    )));
-                } else if choose_mat < 0.95 {
-                    // metal
-                    let albedo = math::random_range_vec(0.5, 1.0);
-                    let fuzzines = rng.gen_range(0.0..0.5);
-                    sphere_mat = Rc::new(Metal::new(albedo, fuzzines));
-                    world.add(Rc::new(Sphere::new(center, 0.2, sphere_mat)));
-                } else {
-                    // glass
-                    sphere_mat = Rc::new(Dielectric::new(1.5));
-                    world.add(Rc::new(Sphere::new(center, 0.2, sphere_mat)));
-                }
-            }
-        }
-    }
-
-    let mat1 = Rc::new(Dielectric::new(1.5));
-    world.add(Rc::new(Sphere::new(glam::dvec3(0.0, 1.0, 0.0), 1.0, mat1)));
-
-    let mat2 = Rc::new(Lambertian::new(glam::dvec3(0.4, 0.2, 0.1)));
-    world.add(Rc::new(Sphere::new(glam::dvec3(-4.0, 1.0, 0.0), 1.0, mat2)));
-
-    let mat3 = Rc::new(Metal::new(glam::dvec3(0.7, 0.6, 0.5), 0.0));
-    world.add(Rc::new(Sphere::new(glam::dvec3(4.0, 1.0, 0.0), 1.0, mat3)));
-
-    world
 }
 
 fn ray_color(r: Ray, world: &dyn Hittable, depth: i32) -> glam::DVec3 {

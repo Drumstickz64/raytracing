@@ -1,6 +1,7 @@
 use std::rc::Rc;
 
 use crate::{
+    aabb::Aabb,
     hittable::{HitRecord, Hittable},
     ray::Ray,
 };
@@ -10,18 +11,12 @@ pub struct HittableList {
 }
 
 impl HittableList {
-    // pub fn new(object: Rc<dyn Hittable>) -> HittableList {
-    //     Self {
-    //         objects: vec![object],
-    //     }
-    // }
-
-    // pub fn clear(&mut self) {
-    //     self.objects.clear();
-    // }
-
     pub fn add(&mut self, object: Rc<dyn Hittable>) {
         self.objects.push(object);
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.objects.is_empty()
     }
 }
 
@@ -37,5 +32,19 @@ impl Hittable for HittableList {
             }
         }
         rec
+    }
+
+    fn bounding_box(&self, time0: f64, time1: f64) -> Option<Aabb> {
+        if self.is_empty() {
+            return None;
+        }
+
+        let mut output_box = self.objects[0].bounding_box(time0, time1)?;
+        for object in self.objects.iter().skip(1) {
+            let aabb = object.bounding_box(time0, time1)?;
+            output_box = output_box + aabb;
+        }
+
+        Some(output_box)
     }
 }
