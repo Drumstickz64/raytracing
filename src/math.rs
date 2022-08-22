@@ -46,8 +46,8 @@ pub fn random_unit_vec() -> glam::DVec3 {
 
 pub trait VecExtension: Copy {
     fn is_near_zero(self) -> bool;
-    fn reflect(self, rhs: glam::DVec3) -> Self;
-    fn refract(self, normal: glam::DVec3, etai_over_etat: f64) -> Self;
+    fn reflect(self, rhs: Self) -> Self;
+    fn refract(self, normal: Self, etai_over_etat: f64) -> Self;
 }
 
 impl VecExtension for glam::DVec3 {

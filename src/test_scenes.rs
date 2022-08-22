@@ -3,39 +3,76 @@ use std::rc::Rc;
 use rand::prelude::*;
 
 use crate::{
+    camera::Camera,
     hittable_list::HittableList,
     material::{Dielectric, Lambertian, Material, Metal},
     math,
     sphere::{MovingSphere, Sphere},
+    texture::CheckerTexture,
+    ASPECT_RATIO, TIME0, TIME1,
 };
 
+type Scene = (HittableList, Camera);
+
 #[allow(dead_code)]
-pub fn simple_scene() -> HittableList {
+pub fn simple_scene() -> Scene {
+    let lookfrom = glam::DVec3::ZERO;
+    let lookat = glam::dvec3(0.0, 0.0, 1.0);
+    let vup = glam::dvec3(0.0, 1.0, 0.0);
+    let vfov = 40.0;
+    let aperture = 0.1;
+    let focus_dist = 1.0;
+    let cam = Camera::new(
+        lookfrom,
+        lookat,
+        vup,
+        vfov,
+        ASPECT_RATIO,
+        aperture,
+        focus_dist,
+        TIME0,
+        TIME1,
+    );
     let mut world = HittableList::default();
     world.add(Rc::new(Sphere::new(
-        glam::dvec3(0.0, 0.0, 0.0),
-        1.0,
-        Rc::new(Lambertian::new(glam::dvec3(0.7, 0.3, 0.3))),
+        glam::dvec3(-0.5, 0.0, 1.0),
+        0.1,
+        Rc::new(Lambertian::from_color(glam::dvec3(0.7, 0.3, 0.3))),
     )));
     world.add(Rc::new(Sphere::new(
-        glam::dvec3(-24.0, 0.0, -2.0),
-        0.5,
-        Rc::new(Lambertian::new(glam::dvec3(0.3, 0.7, 0.3))),
-    )));
-    world.add(Rc::new(Sphere::new(
-        glam::dvec3(6.0, 1.0, 0.0),
-        0.5,
-        Rc::new(Lambertian::new(glam::dvec3(0.3, 0.3, 0.7))),
+        glam::dvec3(0.5, 0.0, 1.0),
+        0.1,
+        Rc::new(Lambertian::from_color(glam::dvec3(0.3, 0.7, 0.3))),
     )));
 
-    world
+    (world, cam)
 }
 
 #[allow(dead_code)]
-pub fn random_scene() -> HittableList {
+pub fn random_scene() -> Scene {
+    let lookfrom = glam::dvec3(13.0, 2.0, 3.0);
+    let lookat = glam::dvec3(0.0, 0.0, 0.0);
+    let vup = glam::dvec3(0.0, 1.0, 0.0);
+    let vfov = 20.0;
+    let aperture = 0.1;
+    let dist_to_focus = 10.0;
+    let cam = Camera::new(
+        lookfrom,
+        lookat,
+        vup,
+        vfov,
+        ASPECT_RATIO,
+        aperture,
+        dist_to_focus,
+        TIME0,
+        TIME1,
+    );
     let mut world = HittableList::default();
     let mut rng = thread_rng();
-    let ground_mat = Rc::new(Lambertian::new(glam::DVec3::splat(0.5)));
+
+    let checker_texture =
+        CheckerTexture::from_colors(glam::dvec3(0.2, 0.3, 0.1), glam::dvec3(0.9, 0.9, 0.9));
+    let ground_mat = Rc::new(Lambertian::from_texture(Rc::new(checker_texture)));
     world.add(Rc::new(Sphere::new(
         glam::dvec3(0.0, -1000.0, 0.0),
         1000.0,
@@ -55,7 +92,7 @@ pub fn random_scene() -> HittableList {
                     // diffuse
                     let center2 = center + glam::dvec3(0.0, rng.gen_range(0.0..0.5), 0.0);
                     let albedo = rng.gen::<glam::DVec3>() * rng.gen::<glam::DVec3>();
-                    sphere_mat = Rc::new(Lambertian::new(albedo));
+                    sphere_mat = Rc::new(Lambertian::from_color(albedo));
                     world.add(Rc::new(MovingSphere::new(
                         center, center2, 0.0, 1.0, 0.2, sphere_mat,
                     )));
@@ -77,11 +114,52 @@ pub fn random_scene() -> HittableList {
     let mat1 = Rc::new(Dielectric::new(1.5));
     world.add(Rc::new(Sphere::new(glam::dvec3(0.0, 1.0, 0.0), 1.0, mat1)));
 
-    let mat2 = Rc::new(Lambertian::new(glam::dvec3(0.4, 0.2, 0.1)));
+    let mat2 = Rc::new(Lambertian::from_color(glam::dvec3(0.4, 0.2, 0.1)));
     world.add(Rc::new(Sphere::new(glam::dvec3(-4.0, 1.0, 0.0), 1.0, mat2)));
 
     let mat3 = Rc::new(Metal::new(glam::dvec3(0.7, 0.6, 0.5), 0.0));
     world.add(Rc::new(Sphere::new(glam::dvec3(4.0, 1.0, 0.0), 1.0, mat3)));
 
-    world
+    (world, cam)
+}
+
+#[allow(dead_code)]
+pub fn two_spheres() -> Scene {
+    let lookfrom = glam::dvec3(13.0, 2.0, 3.0);
+    let lookat = glam::dvec3(0.0, 0.0, 0.0);
+    let vup = glam::dvec3(0.0, 1.0, 0.0);
+    let vfov = 20.0;
+    let aperture = 0.1;
+    let dist_to_focus = 10.0;
+    let cam = Camera::new(
+        lookfrom,
+        lookat,
+        vup,
+        vfov,
+        ASPECT_RATIO,
+        aperture,
+        dist_to_focus,
+        TIME0,
+        TIME1,
+    );
+
+    let mut objects = HittableList::default();
+
+    let checker = Rc::new(CheckerTexture::from_colors(
+        glam::dvec3(0.2, 0.3, 0.1),
+        glam::dvec3(0.9, 0.9, 0.9),
+    ));
+
+    objects.add(Rc::new(Sphere::new(
+        glam::dvec3(0.0, -10.0, 0.0),
+        10.0,
+        Rc::new(Lambertian::from_texture(checker.clone())),
+    )));
+    objects.add(Rc::new(Sphere::new(
+        glam::dvec3(0.0, 10.0, 0.0),
+        10.0,
+        Rc::new(Lambertian::from_texture(checker)),
+    )));
+
+    (objects, cam)
 }

@@ -9,6 +9,7 @@ mod math;
 mod ray;
 mod sphere;
 mod test_scenes;
+mod texture;
 
 use std::{fmt::Write, fs};
 
@@ -16,50 +17,31 @@ use indicatif::ProgressBar;
 use rand::prelude::*;
 
 use crate::{
-    bvh::BvhNode, camera::Camera, color::stringify_color, hittable::Hittable,
-    material::MaterialRayInteraction, ray::Ray,
+    bvh::BvhNode, color::stringify_color, hittable::Hittable, material::MaterialRayInteraction,
+    ray::Ray,
 };
 
 // Screen
 const ASPECT_RATIO: f64 = 16.0 / 9.0;
 const IMAGE_WIDTH: u32 = 400;
 const IMAGE_HEIGHT: u32 = (IMAGE_WIDTH as f64 / ASPECT_RATIO) as u32;
-const SAMPLES_PER_PIXEL: u32 = 50;
+const SAMPLES_PER_PIXEL: u32 = 100;
 const MAX_DEPTH: i32 = 50;
+const TIME0: f64 = 0.0;
+const TIME1: f64 = 1.0;
 const OUTPUT_FILE: &str = "out.ppm";
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut buf = String::with_capacity((IMAGE_WIDTH * IMAGE_HEIGHT) as usize * 12 + 20);
     let pb = ProgressBar::new(IMAGE_HEIGHT as u64);
+    let mut rng = thread_rng();
 
-    let time0 = 0.0;
-    let time1 = 1.0;
     // World
-    let world = test_scenes::random_scene();
-    let world = BvhNode::from_hittable_list(world, time0, time1);
-
-    // Camera
-    let lookfrom = glam::dvec3(13.0, 2.0, 3.0);
-    let lookat = glam::dvec3(0.0, 0.0, 0.0);
-    let vup = glam::dvec3(0.0, 1.0, 0.0);
-    let vfov = 20.0;
-    let aperture = 0.1;
-    let dist_to_focus = 10.0;
-    let cam = Camera::new(
-        lookfrom,
-        lookat,
-        vup,
-        vfov,
-        ASPECT_RATIO,
-        aperture,
-        dist_to_focus,
-        time0,
-        time1,
-    );
+    let (world, cam) = test_scenes::two_spheres();
+    let world = BvhNode::from_hittable_list(world, TIME0, TIME1);
 
     write!(&mut buf, "P3\n{IMAGE_WIDTH} {IMAGE_HEIGHT}\n255\n")?;
 
-    let mut rng = thread_rng();
     for j in (0..IMAGE_HEIGHT).rev() {
         for i in 0..IMAGE_WIDTH {
             let mut pixel_color = color::BLACK;

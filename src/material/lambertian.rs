@@ -1,18 +1,27 @@
+use std::rc::Rc;
+
 use crate::{
     hittable::HitRecord,
     math::{self, VecExtension},
     ray::Ray,
+    texture::{SolidColor, Texture},
 };
 
 use super::{Material, MaterialRayInteraction};
 
 pub struct Lambertian {
-    pub albedo: glam::DVec3,
+    pub albedo: Rc<dyn Texture>,
 }
 
 impl Lambertian {
-    pub fn new(albedo: glam::DVec3) -> Self {
-        Self { albedo }
+    pub fn from_texture(texture: Rc<dyn Texture>) -> Self {
+        Self { albedo: texture }
+    }
+
+    pub fn from_color(color: glam::DVec3) -> Self {
+        Self {
+            albedo: Rc::new(SolidColor::from_color(color)),
+        }
     }
 }
 
@@ -25,7 +34,7 @@ impl Material for Lambertian {
             scatter_direction
         };
         let scattered_ray = Ray::new(rec.point, scatter_direction, r_in.time);
-        let attenuation = self.albedo;
+        let attenuation = self.albedo.value(rec.u, rec.v, rec.point);
         MaterialRayInteraction::Scattered {
             attenuation,
             scattered_ray,

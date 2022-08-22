@@ -71,6 +71,7 @@ impl Hittable for MovingSphere {
             mat: Some(self.mat.clone()),
             t: root,
             front_face: false,
+            ..Default::default()
         };
 
         rec.set_face_normal(r, outward_normal);

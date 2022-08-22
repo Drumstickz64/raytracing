@@ -1,4 +1,7 @@
-use std::rc::Rc;
+use std::{
+    f64::consts::{PI, TAU},
+    rc::Rc,
+};
 
 use crate::{
     aabb::Aabb,
@@ -20,6 +23,19 @@ impl Sphere {
             radius,
             mat,
         }
+    }
+
+    fn get_sphere_uv(p: glam::DVec3) -> (f64, f64) {
+        // p: a given point on the sphere of radius one, centered at the origin.
+        // u: returned value [0,1] of angle around the Y axis from X=-1.
+        // v: returned value [0,1] of angle from Y=-1 to Y=+1.
+        //     <1 0 0> yields <0.50 0.50>       <-1  0  0> yields <0.00 0.50>
+        //     <0 1 0> yields <0.50 1.00>       < 0 -1  0> yields <0.50 0.00>
+        //     <0 0 1> yields <0.25 0.50>       < 0  0 -1> yields <0.75 0.50>
+        let theta = p.y.acos();
+        let phi = f64::atan2(p.z, -p.x);
+
+        (phi / TAU, theta / PI)
     }
 }
 
@@ -46,11 +62,14 @@ impl Hittable for Sphere {
 
         let point = r.at(root);
         let outward_normal = (point - self.center) / self.radius;
+        let (u, v) = Self::get_sphere_uv(point);
         let mut rec = HitRecord {
             point,
             normal: glam::DVec3::default(),
             mat: Some(self.mat.clone()),
             t: root,
+            u,
+            v,
             front_face: false,
         };
 
