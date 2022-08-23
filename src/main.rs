@@ -6,6 +6,7 @@ mod hittable;
 mod hittable_list;
 mod material;
 mod math;
+mod noise;
 mod ray;
 mod sphere;
 mod test_scenes;
@@ -37,7 +38,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut rng = thread_rng();
 
     // World
-    let (world, cam) = test_scenes::two_spheres();
+    let (world, cam) = test_scenes::two_perlin_spheres();
     let world = BvhNode::from_hittable_list(world, TIME0, TIME1);
 
     write!(&mut buf, "P3\n{IMAGE_WIDTH} {IMAGE_HEIGHT}\n255\n")?;

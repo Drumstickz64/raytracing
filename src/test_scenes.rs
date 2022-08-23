@@ -8,7 +8,7 @@ use crate::{
     material::{Dielectric, Lambertian, Material, Metal},
     math,
     sphere::{MovingSphere, Sphere},
-    texture::CheckerTexture,
+    texture::{CheckerTexture, NoiseTexture},
     ASPECT_RATIO, TIME0, TIME1,
 };
 
@@ -143,23 +143,60 @@ pub fn two_spheres() -> Scene {
         TIME1,
     );
 
-    let mut objects = HittableList::default();
+    let mut world = HittableList::default();
 
     let checker = Rc::new(CheckerTexture::from_colors(
         glam::dvec3(0.2, 0.3, 0.1),
         glam::dvec3(0.9, 0.9, 0.9),
     ));
 
-    objects.add(Rc::new(Sphere::new(
+    world.add(Rc::new(Sphere::new(
         glam::dvec3(0.0, -10.0, 0.0),
         10.0,
         Rc::new(Lambertian::from_texture(checker.clone())),
     )));
-    objects.add(Rc::new(Sphere::new(
+    world.add(Rc::new(Sphere::new(
         glam::dvec3(0.0, 10.0, 0.0),
         10.0,
         Rc::new(Lambertian::from_texture(checker)),
     )));
 
-    (objects, cam)
+    (world, cam)
+}
+
+#[allow(dead_code)]
+pub fn two_perlin_spheres() -> Scene {
+    let lookfrom = glam::dvec3(13.0, 2.0, 3.0);
+    let lookat = glam::dvec3(0.0, 0.0, 0.0);
+    let vup = glam::dvec3(0.0, 1.0, 0.0);
+    let vfov = 20.0;
+    let aperture = 0.1;
+    let dist_to_focus = 10.0;
+    let cam = Camera::new(
+        lookfrom,
+        lookat,
+        vup,
+        vfov,
+        ASPECT_RATIO,
+        aperture,
+        dist_to_focus,
+        TIME0,
+        TIME1,
+    );
+
+    let mut world = HittableList::default();
+
+    let pertext = Rc::new(NoiseTexture::new().with_scale(4.0));
+    world.add(Rc::new(Sphere::new(
+        glam::dvec3(0.0, -1000.0, 0.0),
+        1000.0,
+        Rc::new(Lambertian::from_texture(pertext.clone())),
+    )));
+    world.add(Rc::new(Sphere::new(
+        glam::dvec3(0.0, 2.0, 0.0),
+        2.0,
+        Rc::new(Lambertian::from_texture(pertext)),
+    )));
+
+    (world, cam)
 }
