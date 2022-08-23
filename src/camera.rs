@@ -7,6 +7,7 @@ pub struct Camera {
     horizontal: glam::DVec3,
     vertical: glam::DVec3,
     lower_left_corner: glam::DVec3,
+    #[allow(dead_code)]
     w: glam::DVec3,
     v: glam::DVec3,
     u: glam::DVec3,

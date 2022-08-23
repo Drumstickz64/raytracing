@@ -23,6 +23,6 @@ impl NoiseTexture {
 
 impl Texture for NoiseTexture {
     fn value(&self, _u: f64, _v: f64, p: glam::DVec3) -> glam::DVec3 {
-        color::WHITE * self.noise.noise(p * self.scale)
+        color::WHITE * 0.5 * (1.0 + f64::sin(self.scale * p.z + 10.0 * self.noise.turb(p, 7)))
     }
 }

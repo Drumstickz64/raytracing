@@ -8,6 +8,7 @@ pub struct CheckerTexture {
 }
 
 impl CheckerTexture {
+    #[allow(dead_code)]
     pub fn new(odd_texture: Rc<dyn Texture>, even_texture: Rc<dyn Texture>) -> Self {
         Self {
             odd_texture,

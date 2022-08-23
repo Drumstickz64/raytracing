@@ -5,6 +5,7 @@ pub struct SolidColor {
 }
 
 impl SolidColor {
+    #[allow(dead_code)]
     pub fn new(r: f64, g: f64, b: f64) -> SolidColor {
         SolidColor {
             color_value: glam::dvec3(r, g, b),
