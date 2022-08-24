@@ -8,7 +8,7 @@ use crate::{
     material::{Dielectric, Lambertian, Material, Metal},
     math,
     sphere::{MovingSphere, Sphere},
-    texture::{CheckerTexture, NoiseTexture},
+    texture::{CheckerTexture, ImageTexture, NoiseTexture},
     ASPECT_RATIO, TIME0, TIME1,
 };
 
@@ -197,6 +197,34 @@ pub fn two_perlin_spheres() -> Scene {
         2.0,
         Rc::new(Lambertian::from_texture(pertext)),
     )));
+
+    (world, cam)
+}
+
+#[allow(dead_code)]
+pub fn earth() -> Scene {
+    let lookfrom = glam::dvec3(13.0, 2.0, 3.0);
+    let lookat = glam::dvec3(0.0, 0.0, 0.0);
+    let vup = glam::dvec3(0.0, 1.0, 0.0);
+    let vfov = 20.0;
+    let aperture = 0.1;
+    let dist_to_focus = 10.0;
+    let cam = Camera::new(
+        lookfrom,
+        lookat,
+        vup,
+        vfov,
+        ASPECT_RATIO,
+        aperture,
+        dist_to_focus,
+        TIME0,
+        TIME1,
+    );
+
+    let earth_texture = Rc::new(ImageTexture::new("earthmap.jpg"));
+    let earth_mat = Rc::new(Lambertian::from_texture(earth_texture));
+    let globe = Rc::new(Sphere::new(glam::DVec3::ZERO, 2.0, earth_mat));
+    let world = HittableList::new(globe);
 
     (world, cam)
 }

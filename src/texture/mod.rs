@@ -1,4 +1,5 @@
 mod checker;
+mod image;
 mod noise;
 mod solid_color;
 
@@ -7,5 +8,6 @@ pub trait Texture {
 }
 
 pub use checker::CheckerTexture;
+pub use image::ImageTexture;
 pub use noise::NoiseTexture;
 pub use solid_color::SolidColor;

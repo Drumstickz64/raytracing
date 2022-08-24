@@ -32,8 +32,8 @@ impl Sphere {
         //     <1 0 0> yields <0.50 0.50>       <-1  0  0> yields <0.00 0.50>
         //     <0 1 0> yields <0.50 1.00>       < 0 -1  0> yields <0.50 0.00>
         //     <0 0 1> yields <0.25 0.50>       < 0  0 -1> yields <0.75 0.50>
-        let theta = p.y.acos();
-        let phi = f64::atan2(p.z, -p.x);
+        let theta = (-p.y).acos();
+        let phi = (-p.z).atan2(p.x) + PI;
 
         (phi / TAU, theta / PI)
     }
@@ -62,7 +62,7 @@ impl Hittable for Sphere {
 
         let point = r.at(root);
         let outward_normal = (point - self.center) / self.radius;
-        let (u, v) = Self::get_sphere_uv(point);
+        let (u, v) = Self::get_sphere_uv(outward_normal);
         let mut rec = HitRecord {
             point,
             normal: glam::DVec3::default(),

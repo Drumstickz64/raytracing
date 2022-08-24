@@ -18,6 +18,12 @@ impl HittableList {
     pub fn is_empty(&self) -> bool {
         self.objects.is_empty()
     }
+
+    pub fn new(object: Rc<dyn Hittable>) -> Self {
+        let mut world = Self::default();
+        world.add(object);
+        world
+    }
 }
 
 impl Hittable for HittableList {
