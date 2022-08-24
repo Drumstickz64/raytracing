@@ -7,6 +7,7 @@ use crate::{
     aabb::Aabb,
     hittable::{HitRecord, Hittable},
     material::Material,
+    ray::Ray,
 };
 
 #[derive(Clone)]
@@ -40,7 +41,7 @@ impl Sphere {
 }
 
 impl Hittable for Sphere {
-    fn hit(&self, r: crate::ray::Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+    fn hit(&self, r: Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let oc = r.origin - self.center;
         let a = r.direction.length_squared();
         let half_b = oc.dot(r.direction);
@@ -63,7 +64,7 @@ impl Hittable for Sphere {
         let point = r.at(root);
         let outward_normal = (point - self.center) / self.radius;
         let (u, v) = Self::get_sphere_uv(outward_normal);
-        let mut rec = HitRecord {
+        let rec = HitRecord {
             point,
             normal: glam::DVec3::default(),
             mat: Some(self.mat.clone()),
@@ -71,9 +72,9 @@ impl Hittable for Sphere {
             u,
             v,
             front_face: false,
-        };
+        }
+        .with_face_normal(r, outward_normal);
 
-        rec.set_face_normal(r, outward_normal);
         Some(rec)
     }
 

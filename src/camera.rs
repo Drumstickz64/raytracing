@@ -2,6 +2,7 @@ use rand::{thread_rng, Rng};
 
 use crate::{math, ray::Ray};
 
+#[derive(Debug, Default)]
 pub struct Camera {
     origin: glam::DVec3,
     horizontal: glam::DVec3,

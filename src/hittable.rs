@@ -14,6 +14,11 @@ pub struct HitRecord {
 }
 
 impl HitRecord {
+    pub fn with_face_normal(mut self, r: Ray, outward_normal: glam::DVec3) -> Self {
+        self.set_face_normal(r, outward_normal);
+        self
+    }
+
     pub fn set_face_normal(&mut self, r: Ray, outward_normal: glam::DVec3) {
         self.front_face = r.direction.dot(outward_normal) < 0.0;
         self.normal = if self.front_face {

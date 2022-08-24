@@ -1,6 +1,7 @@
 pub const WHITE: glam::DVec3 = glam::dvec3(1.0, 1.0, 1.0);
 pub const BLACK: glam::DVec3 = glam::dvec3(0.0, 0.0, 0.0);
-pub const SKY_BLUE: glam::DVec3 = glam::dvec3(0.5, 0.7, 1.0);
+// pub const SKY_BLUE: glam::DVec3 = glam::dvec3(0.5, 0.7, 1.0);
+pub const DEEP_SKY_BLUE: glam::DVec3 = glam::dvec3(0.7, 0.8, 1.0);
 
 pub fn stringify_color(color: glam::DVec3, samples_per_pixel: u32) -> String {
     let scale = 1.0 / samples_per_pixel as f64;

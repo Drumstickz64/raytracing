@@ -65,16 +65,16 @@ impl Hittable for MovingSphere {
 
         let point = r.at(root);
         let outward_normal = (point - center) / self.radius;
-        let mut rec = HitRecord {
+        let rec = HitRecord {
             point,
             normal: glam::DVec3::default(),
             mat: Some(self.mat.clone()),
             t: root,
             front_face: false,
             ..Default::default()
-        };
+        }
+        .with_face_normal(r, outward_normal);
 
-        rec.set_face_normal(r, outward_normal);
         Some(rec)
     }
 
