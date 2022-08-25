@@ -6,7 +6,9 @@ use crate::{
     aarect::{XYRect, XZRect, YZRect},
     camera::Camera,
     color,
+    geometric_box::GeometricBox,
     hittable_list::HittableList,
+    instance::{RotateY, Tranlate},
     material::{Dielectric, DiffuseLight, Lambertian, Material, Metal},
     math,
     sphere::{MovingSphere, Sphere},
@@ -405,13 +407,31 @@ pub fn cornel_box() -> Scene {
     }));
 
     world.add(Rc::new(XYRect {
-        mp: white,
+        mp: white.clone(),
         x0: 0.0,
         x1: 555.0,
         y0: 0.0,
         y1: 555.0,
         k: 555.0,
     }));
+
+    let box1 = Rc::new(GeometricBox::new(
+        glam::DVec3::ZERO,
+        glam::dvec3(165.0, 330.0, 165.0),
+        white.clone(),
+    ));
+    let box1 = Rc::new(RotateY::new(box1, 15.0));
+    let box1 = Rc::new(Tranlate::new(box1, glam::dvec3(265.0, 0.0, 295.0)));
+    world.add(box1);
+
+    let box2 = Rc::new(GeometricBox::new(
+        glam::DVec3::ZERO,
+        glam::DVec3::splat(165.0),
+        white,
+    ));
+    let box2 = Rc::new(RotateY::new(box2, -18.0));
+    let box2 = Rc::new(Tranlate::new(box2, glam::dvec3(130.0, 0.0, 65.0)));
+    world.add(box2);
 
     Scene::new(world, cam)
         .with_background_color(background_color)
