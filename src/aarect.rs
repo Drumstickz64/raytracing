@@ -8,12 +8,25 @@ use crate::{
 };
 
 pub struct XYRect {
-    pub mp: Rc<dyn Material>,
     pub x0: f64,
     pub x1: f64,
     pub y0: f64,
     pub y1: f64,
     pub k: f64,
+    pub mp: Rc<dyn Material>,
+}
+
+impl XYRect {
+    pub fn new(x0: f64, x1: f64, y0: f64, y1: f64, k: f64, mp: Rc<dyn Material>) -> Self {
+        Self {
+            x0,
+            x1,
+            y0,
+            y1,
+            k,
+            mp,
+        }
+    }
 }
 
 impl Hittable for XYRect {
@@ -56,12 +69,25 @@ impl Hittable for XYRect {
 }
 
 pub struct XZRect {
-    pub mp: Rc<dyn Material>,
     pub x0: f64,
     pub x1: f64,
     pub z0: f64,
     pub z1: f64,
     pub k: f64,
+    pub mp: Rc<dyn Material>,
+}
+
+impl XZRect {
+    pub fn new(x0: f64, x1: f64, z0: f64, z1: f64, k: f64, mp: Rc<dyn Material>) -> Self {
+        Self {
+            x0,
+            x1,
+            z0,
+            z1,
+            k,
+            mp,
+        }
+    }
 }
 
 impl Hittable for XZRect {
@@ -104,12 +130,25 @@ impl Hittable for XZRect {
 }
 
 pub struct YZRect {
-    pub mp: Rc<dyn Material>,
     pub y0: f64,
     pub y1: f64,
     pub z0: f64,
     pub z1: f64,
     pub k: f64,
+    pub mp: Rc<dyn Material>,
+}
+
+impl YZRect {
+    pub fn new(y0: f64, y1: f64, z0: f64, z1: f64, k: f64, mp: Rc<dyn Material>) -> Self {
+        Self {
+            y0,
+            y1,
+            z0,
+            z1,
+            k,
+            mp,
+        }
+    }
 }
 
 impl Hittable for YZRect {

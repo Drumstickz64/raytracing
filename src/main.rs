@@ -3,6 +3,7 @@ mod aarect;
 mod bvh;
 mod camera;
 mod color;
+mod constant_medium;
 mod geometric_box;
 mod hittable;
 mod hittable_list;
@@ -42,7 +43,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         samples_per_pixel,
         image_width,
         image_height,
-    } = test_scenes::cornel_box();
+    } = test_scenes::cornel_smoke();
 
     let mut buf = String::with_capacity((image_width * image_height) as usize * 12 + 20);
     let pb = ProgressBar::new(image_height as u64);

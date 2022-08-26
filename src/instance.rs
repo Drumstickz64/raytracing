@@ -6,18 +6,18 @@ use crate::{
     ray::Ray,
 };
 
-pub struct Tranlate {
+pub struct Translate {
     pub ptr: Rc<dyn Hittable>,
     pub offset: glam::DVec3,
 }
 
-impl Tranlate {
+impl Translate {
     pub fn new(ptr: Rc<dyn Hittable>, offset: glam::DVec3) -> Self {
         Self { ptr, offset }
     }
 }
 
-impl Hittable for Tranlate {
+impl Hittable for Translate {
     fn hit(&self, r: Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         let moved_r = Ray::new(r.origin - self.offset, r.direction, r.time);
         let mut rec = self.ptr.hit(moved_r, t_min, t_max)?;

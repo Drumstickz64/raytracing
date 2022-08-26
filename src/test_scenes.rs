@@ -6,9 +6,10 @@ use crate::{
     aarect::{XYRect, XZRect, YZRect},
     camera::Camera,
     color,
+    constant_medium::ConstantMedium,
     geometric_box::GeometricBox,
     hittable_list::HittableList,
-    instance::{RotateY, Tranlate},
+    instance::{RotateY, Translate},
     material::{Dielectric, DiffuseLight, Lambertian, Material, Metal},
     math,
     sphere::{MovingSphere, Sphere},
@@ -331,6 +332,7 @@ pub fn simple_light() -> Scene {
         .with_samples_per_pixel(400)
 }
 
+#[allow(dead_code)]
 pub fn cornel_box() -> Scene {
     let aspect_ratio = 1.0;
     let image_width = 600;
@@ -421,7 +423,7 @@ pub fn cornel_box() -> Scene {
         white.clone(),
     ));
     let box1 = Rc::new(RotateY::new(box1, 15.0));
-    let box1 = Rc::new(Tranlate::new(box1, glam::dvec3(265.0, 0.0, 295.0)));
+    let box1 = Rc::new(Translate::new(box1, glam::dvec3(265.0, 0.0, 295.0)));
     world.add(box1);
 
     let box2 = Rc::new(GeometricBox::new(
@@ -430,8 +432,102 @@ pub fn cornel_box() -> Scene {
         white,
     ));
     let box2 = Rc::new(RotateY::new(box2, -18.0));
-    let box2 = Rc::new(Tranlate::new(box2, glam::dvec3(130.0, 0.0, 65.0)));
+    let box2 = Rc::new(Translate::new(box2, glam::dvec3(130.0, 0.0, 65.0)));
     world.add(box2);
+
+    Scene::new(world, cam)
+        .with_background_color(background_color)
+        .with_image_width(image_width, aspect_ratio)
+        .with_samples_per_pixel(samples_per_pixel)
+}
+
+#[allow(dead_code)]
+pub fn cornel_smoke() -> Scene {
+    let background_color = color::BLACK;
+    let aspect_ratio = 1.0;
+    let image_width = 600;
+    let samples_per_pixel = 200;
+    let lookfrom = glam::dvec3(278.0, 278.0, -800.0);
+    let lookat = glam::dvec3(278.0, 278.0, 0.0);
+    let vup = glam::DVec3::Y;
+    let vfov = 40.0;
+    let aperture = 0.0;
+    let dist_to_focus = 10.0;
+    let cam = Camera::new(
+        lookfrom,
+        lookat,
+        vup,
+        vfov,
+        aspect_ratio,
+        aperture,
+        dist_to_focus,
+        TIME0,
+        TIME1,
+    );
+
+    let mut world = HittableList::default();
+
+    let red = Rc::new(Lambertian::from_color(glam::dvec3(0.65, 0.05, 0.05)));
+    let white = Rc::new(Lambertian::from_color(glam::dvec3(0.73, 0.73, 0.73)));
+    let green = Rc::new(Lambertian::from_color(glam::dvec3(0.12, 0.45, 0.15)));
+    let light = Rc::new(DiffuseLight::from_color(glam::dvec3(7.0, 7.0, 7.0)));
+
+    world.add(Rc::new(YZRect::new(0.0, 555.0, 0.0, 555.0, 555.0, green)));
+    world.add(Rc::new(YZRect::new(0.0, 555.0, 0.0, 555.0, 0.0, red)));
+    world.add(Rc::new(XZRect::new(
+        113.0, 443.0, 127.0, 432.0, 554.0, light,
+    )));
+    world.add(Rc::new(XZRect::new(
+        0.0,
+        555.0,
+        0.0,
+        555.0,
+        555.0,
+        white.clone(),
+    )));
+    world.add(Rc::new(XZRect::new(
+        0.0,
+        555.0,
+        0.0,
+        555.0,
+        0.0,
+        white.clone(),
+    )));
+    world.add(Rc::new(XYRect::new(
+        0.0,
+        555.0,
+        0.0,
+        555.0,
+        555.0,
+        white.clone(),
+    )));
+
+    let box1 = Rc::new(GeometricBox::new(
+        glam::dvec3(0.0, 0.0, 0.0),
+        glam::dvec3(165.0, 330.0, 165.0),
+        white.clone(),
+    ));
+    let box1 = Rc::new(RotateY::new(box1, 15.0));
+    let box1 = Rc::new(Translate::new(box1, glam::dvec3(265.0, 0.0, 295.0)));
+
+    let box2 = Rc::new(GeometricBox::new(
+        glam::dvec3(0.0, 0.0, 0.0),
+        glam::dvec3(165.0, 165.0, 165.0),
+        white,
+    ));
+    let box2 = Rc::new(RotateY::new(box2, -18.0));
+    let box2 = Rc::new(Translate::new(box2, glam::dvec3(130.0, 0.0, 65.0)));
+
+    world.add(Rc::new(ConstantMedium::from_color(
+        box1,
+        0.01,
+        glam::dvec3(0.0, 0.0, 0.0),
+    )));
+    world.add(Rc::new(ConstantMedium::from_color(
+        box2,
+        0.01,
+        glam::dvec3(1.0, 1.0, 1.0),
+    )));
 
     Scene::new(world, cam)
         .with_background_color(background_color)
