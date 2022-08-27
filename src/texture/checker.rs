@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use super::{SolidColor, Texture};
+use crate::texture::{SolidColor, Texture};
 
 pub struct CheckerTexture {
     odd_texture: Rc<dyn Texture>,

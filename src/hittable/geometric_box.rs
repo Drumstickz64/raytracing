@@ -2,9 +2,8 @@ use std::rc::Rc;
 
 use crate::{
     aabb::Aabb,
-    aarect::{XYRect, XZRect, YZRect},
     hittable::{HitRecord, Hittable},
-    hittable_list::HittableList,
+    hittable::{HittableList, XYRect, XZRect, YZRect},
     material::Material,
     ray::Ray,
 };

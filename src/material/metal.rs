@@ -1,10 +1,9 @@
 use crate::{
     hittable::HitRecord,
+    material::{Material, MaterialRayInteraction},
     math::{self, VecExtension},
     ray::Ray,
 };
-
-use super::{Material, MaterialRayInteraction};
 
 pub struct Metal {
     pub albedo: glam::DVec3,

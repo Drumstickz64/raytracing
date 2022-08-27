@@ -3,17 +3,15 @@ use std::rc::Rc;
 use rand::prelude::*;
 
 use crate::{
-    aarect::{XYRect, XZRect, YZRect},
-    bvh::BvhNode,
     camera::Camera,
     color,
-    constant_medium::ConstantMedium,
-    geometric_box::GeometricBox,
-    hittable_list::HittableList,
-    instance::{RotateY, Translate},
+    hittable::{
+        sphere::{MovingSphere, Sphere},
+        BvhNode, ConstantMedium, GeometricBox, HittableList, RotateY, Translate, XYRect, XZRect,
+        YZRect,
+    },
     material::{Dielectric, DiffuseLight, Lambertian, Material, Metal},
     math,
-    sphere::{MovingSphere, Sphere},
     texture::{CheckerTexture, ImageTexture, NoiseTexture},
     ASPECT_RATIO, TIME0, TIME1,
 };
@@ -316,14 +314,7 @@ pub fn simple_light() -> Scene {
     )));
 
     let difflight = Rc::new(DiffuseLight::from_color(glam::DVec3::splat(4.0)));
-    let rect_light = XYRect {
-        mp: difflight.clone(),
-        x0: 3.0,
-        x1: 5.0,
-        y0: 1.0,
-        y1: 3.0,
-        k: -2.0,
-    };
+    let rect_light = XYRect::new(3.0, 5.0, 1.0, 3.0, -2.0, difflight.clone());
     let sphere_light = Sphere::new(glam::dvec3(0.0, 7.0, 0.0), 2.0, difflight);
     world.add(Rc::new(rect_light));
     world.add(Rc::new(sphere_light));
@@ -364,59 +355,40 @@ pub fn cornel_box() -> Scene {
     let green = Rc::new(Lambertian::from_color(glam::dvec3(0.12, 0.45, 0.15)));
     let light = Rc::new(DiffuseLight::from_color(glam::DVec3::splat(15.0)));
 
-    world.add(Rc::new(YZRect {
-        mp: green,
-        y0: 0.0,
-        y1: 555.0,
-        z0: 0.0,
-        z1: 555.0,
-        k: 555.0,
-    }));
+    world.add(Rc::new(YZRect::new(0.0, 555.0, 0.0, 555.0, 555.0, green)));
 
-    world.add(Rc::new(YZRect {
-        mp: red,
-        y0: 0.0,
-        y1: 555.0,
-        z0: 0.0,
-        z1: 555.0,
-        k: 0.0,
-    }));
+    world.add(Rc::new(YZRect::new(0.0, 555.0, 0.0, 555.0, 0.0, red)));
 
-    world.add(Rc::new(XZRect {
-        mp: light,
-        x0: 213.0,
-        x1: 343.0,
-        z0: 227.0,
-        z1: 332.0,
-        k: 554.0,
-    }));
+    world.add(Rc::new(XZRect::new(
+        213.0, 343.0, 227.0, 332.0, 554.0, light,
+    )));
 
-    world.add(Rc::new(XZRect {
-        mp: white.clone(),
-        x0: 0.0,
-        x1: 555.0,
-        z0: 0.0,
-        z1: 555.0,
-        k: 0.0,
-    }));
+    world.add(Rc::new(XZRect::new(
+        0.0,
+        555.0,
+        0.0,
+        555.0,
+        0.0,
+        white.clone(),
+    )));
 
-    world.add(Rc::new(XZRect {
-        mp: white.clone(),
-        x0: 0.0,
-        x1: 555.0,
-        z0: 0.0,
-        z1: 555.0,
-        k: 555.0,
-    }));
+    world.add(Rc::new(XZRect::new(
+        0.0,
+        555.0,
+        0.0,
+        555.0,
+        555.0,
+        white.clone(),
+    )));
 
-    world.add(Rc::new(XYRect {
-        mp: white.clone(),
-        x0: 0.0,
-        x1: 555.0,
-        y0: 0.0,
-        y1: 555.0,
-        k: 555.0,
-    }));
+    world.add(Rc::new(XYRect::new(
+        0.0,
+        555.0,
+        0.0,
+        555.0,
+        555.0,
+        white.clone(),
+    )));
 
     let box1 = Rc::new(GeometricBox::new(
         glam::DVec3::ZERO,

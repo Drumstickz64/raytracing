@@ -1,3 +1,11 @@
+mod aarect;
+mod bvh;
+mod constant_medium;
+mod geometric_box;
+mod hittable_list;
+mod instance;
+pub mod sphere;
+
 use std::rc::Rc;
 
 use crate::{aabb::Aabb, material::Material, ray::Ray};
@@ -33,3 +41,10 @@ pub trait Hittable {
     fn hit(&self, r: Ray, t_min: f64, t_max: f64) -> Option<HitRecord>;
     fn bounding_box(&self, time0: f64, time1: f64) -> Option<Aabb>;
 }
+
+pub use aarect::{XYRect, XZRect, YZRect};
+pub use bvh::BvhNode;
+pub use constant_medium::ConstantMedium;
+pub use geometric_box::GeometricBox;
+pub use hittable_list::HittableList;
+pub use instance::{RotateY, Translate};

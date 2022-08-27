@@ -1,30 +1,23 @@
 mod aabb;
-mod aarect;
-mod bvh;
 mod camera;
 mod color;
-mod constant_medium;
-mod geometric_box;
 mod hittable;
-mod hittable_list;
-mod instance;
 mod material;
 mod math;
 mod noise;
 mod ray;
-mod sphere;
 mod test_scenes;
 mod texture;
 
 use std::{fmt::Write, fs};
 
+use hittable::BvhNode;
 use indicatif::ProgressBar;
 use rand::prelude::*;
 use test_scenes::Scene;
 
 use crate::{
-    bvh::BvhNode, color::stringify_color, hittable::Hittable, material::MaterialRayInteraction,
-    ray::Ray,
+    color::stringify_color, hittable::Hittable, material::MaterialRayInteraction, ray::Ray,
 };
 
 // Screen

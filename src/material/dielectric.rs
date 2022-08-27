@@ -1,6 +1,10 @@
-use crate::{color, hittable::HitRecord, math::VecExtension, ray::Ray};
-
-use super::{Material, MaterialRayInteraction};
+use crate::{
+    color,
+    hittable::HitRecord,
+    material::{Material, MaterialRayInteraction},
+    math::VecExtension,
+    ray::Ray,
+};
 
 use rand::prelude::*;
 

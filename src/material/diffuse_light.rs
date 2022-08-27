@@ -2,11 +2,10 @@ use std::rc::Rc;
 
 use crate::{
     hittable::HitRecord,
+    material::{Material, MaterialRayInteraction},
     ray::Ray,
     texture::{SolidColor, Texture},
 };
-
-use super::{Material, MaterialRayInteraction};
 
 pub struct DiffuseLight {
     pub emit: Rc<dyn Texture>,

@@ -4,8 +4,7 @@ use rand::prelude::*;
 
 use crate::{
     aabb::Aabb,
-    hittable::{HitRecord, Hittable},
-    hittable_list::HittableList,
+    hittable::{HitRecord, Hittable, HittableList},
     ray::Ray,
 };
 

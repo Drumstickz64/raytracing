@@ -1,6 +1,6 @@
 use crate::{color, noise::Perlin};
 
-use super::Texture;
+use crate::texture::Texture;
 
 pub struct NoiseTexture {
     pub noise: Perlin,

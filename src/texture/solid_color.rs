@@ -1,4 +1,4 @@
-use super::Texture;
+use crate::texture::Texture;
 
 pub struct SolidColor {
     color_value: glam::DVec3,

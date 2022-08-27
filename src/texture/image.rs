@@ -1,6 +1,6 @@
 use stb_image::image::{Image, LoadResult};
 
-use super::Texture;
+use crate::texture::Texture;
 
 pub struct ImageTexture {
     image: Option<Image<u8>>,
