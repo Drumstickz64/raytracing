@@ -43,7 +43,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         samples_per_pixel,
         image_width,
         image_height,
-    } = test_scenes::cornel_smoke();
+    } = test_scenes::final_scene();
 
     let mut buf = String::with_capacity((image_width * image_height) as usize * 12 + 20);
     let pb = ProgressBar::new(image_height as u64);

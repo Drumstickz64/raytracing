@@ -4,6 +4,7 @@ use rand::prelude::*;
 
 use crate::{
     aarect::{XYRect, XZRect, YZRect},
+    bvh::BvhNode,
     camera::Camera,
     color,
     constant_medium::ConstantMedium,
@@ -141,7 +142,7 @@ pub fn random_scene() -> Scene {
                         center, center2, 0.0, 1.0, 0.2, sphere_mat,
                     )));
                 } else if choose_mat < 0.95 {
-                    // metal
+                    // Metal
                     let albedo = math::random_range_vec(0.5, 1.0);
                     let fuzzines = rng.gen_range(0.0..0.5);
                     sphere_mat = Rc::new(Metal::new(albedo, fuzzines));
@@ -527,6 +528,148 @@ pub fn cornel_smoke() -> Scene {
         box2,
         0.01,
         glam::dvec3(1.0, 1.0, 1.0),
+    )));
+
+    Scene::new(world, cam)
+        .with_background_color(background_color)
+        .with_image_width(image_width, aspect_ratio)
+        .with_samples_per_pixel(samples_per_pixel)
+}
+
+#[allow(dead_code)]
+pub fn final_scene() -> Scene {
+    let aspect_ratio = 1.0;
+    let image_width = 800;
+    let samples_per_pixel = 1000;
+    let background_color = glam::dvec3(0.0, 0.0, 0.0);
+    let lookfrom = glam::dvec3(478.0, 278.0, -600.0);
+    let lookat = glam::dvec3(278.0, 278.0, 0.0);
+    let vup = glam::DVec3::Y;
+    let vfov = 40.0;
+    let aperture = 0.0;
+    let dist_to_focus = 10.0;
+    let cam = Camera::new(
+        lookfrom,
+        lookat,
+        vup,
+        vfov,
+        aspect_ratio,
+        aperture,
+        dist_to_focus,
+        TIME0,
+        TIME1,
+    );
+
+    let mut rng = thread_rng();
+
+    let ground = Rc::new(Lambertian::from_color(glam::dvec3(0.48, 0.83, 0.53)));
+
+    let mut boxes1 = HittableList::default();
+    const BOXES_PER_SIDE: u32 = 20;
+    for i in 0..BOXES_PER_SIDE {
+        for j in 0..BOXES_PER_SIDE {
+            let w = 100.0;
+            let x0 = -1000.0 + i as f64 * w;
+            let z0 = -1000.0 + j as f64 * w;
+            let y0 = 0.0;
+            let x1 = x0 + w;
+            let y1 = rng.gen_range(1.0..101.0);
+            let z1 = z0 + w;
+
+            boxes1.add(Rc::new(GeometricBox::new(
+                glam::dvec3(x0, y0, z0),
+                glam::dvec3(x1, y1, z1),
+                ground.clone(),
+            )));
+        }
+    }
+
+    let mut world = HittableList::default();
+
+    world.add(Rc::new(BvhNode::from_hittable_list(boxes1, TIME0, TIME1)));
+
+    let light = Rc::new(DiffuseLight::from_color(glam::dvec3(7.0, 7.0, 7.0)));
+    world.add(Rc::new(XZRect::new(
+        123.0, 423.0, 147.0, 412.0, 554.0, light,
+    )));
+
+    let center1 = glam::dvec3(400.0, 400.0, 200.0);
+    let center2 = center1 + glam::dvec3(30.0, 0.0, 0.0);
+    let moving_sphere_material = Rc::new(Lambertian::from_color(glam::dvec3(0.7, 0.3, 0.1)));
+    world.add(Rc::new(MovingSphere::new(
+        center1,
+        center2,
+        0.0,
+        1.0,
+        50.0,
+        moving_sphere_material,
+    )));
+
+    world.add(Rc::new(Sphere::new(
+        glam::dvec3(260.0, 150.0, 45.0),
+        50.0,
+        Rc::new(Dielectric::new(1.5)),
+    )));
+    world.add(Rc::new(Sphere::new(
+        glam::dvec3(0.0, 150.0, 145.0),
+        50.0,
+        Rc::new(Metal::new(glam::dvec3(0.8, 0.8, 0.9), 1.0)),
+    )));
+
+    let boundary = Rc::new(Sphere::new(
+        glam::dvec3(360.0, 150.0, 145.0),
+        70.0,
+        Rc::new(Dielectric::new(1.5)),
+    ));
+    world.add(boundary.clone());
+    world.add(Rc::new(ConstantMedium::from_color(
+        boundary,
+        0.2,
+        glam::dvec3(0.2, 0.4, 0.9),
+    )));
+    let boundary = Rc::new(Sphere::new(
+        glam::dvec3(0.0, 0.0, 0.0),
+        5000.0,
+        Rc::new(Dielectric::new(1.5)),
+    ));
+    world.add(Rc::new(ConstantMedium::from_color(
+        boundary,
+        0.0001,
+        glam::dvec3(1.0, 1.0, 1.0),
+    )));
+
+    let emat = Rc::new(Lambertian::from_texture(Rc::new(ImageTexture::new(
+        "earthmap.jpg",
+    ))));
+    world.add(Rc::new(Sphere::new(
+        glam::dvec3(400.0, 200.0, 400.0),
+        100.0,
+        emat,
+    )));
+    let pertext = Rc::new(NoiseTexture::new().with_scale(0.1));
+    world.add(Rc::new(Sphere::new(
+        glam::dvec3(220.0, 280.0, 300.0),
+        80.0,
+        Rc::new(Lambertian::from_texture(pertext)),
+    )));
+
+    let mut boxes2 = HittableList::default();
+    let white = Rc::new(Lambertian::from_color(glam::dvec3(0.73, 0.73, 0.73)));
+    const NS: u32 = 1000;
+    for _ in 0..NS {
+        boxes2.add(Rc::new(Sphere::new(
+            math::random_range_vec(0.0, 165.0),
+            10.0,
+            white.clone(),
+        )));
+    }
+
+    world.add(Rc::new(Translate::new(
+        Rc::new(RotateY::new(
+            Rc::new(BvhNode::from_hittable_list(boxes2, 0.0, 1.0)),
+            15.0,
+        )),
+        glam::dvec3(-100.0, 270.0, 395.0),
     )));
 
     Scene::new(world, cam)
